@@ -4,9 +4,9 @@ hbs1
 Project: Host Basic Services
 
 Licence: ISC
-  http://en.wikipedia.org/wiki/ISC_license
-  http://opensource.org/licenses/ISC
-  https://www.isc.org/wordpress/software/software-support-policy/isc-license/
+* http://en.wikipedia.org/wiki/ISC_license
+* http://opensource.org/licenses/ISC
+* https://www.isc.org/wordpress/software/software-support-policy/isc-license/
 
 Description:
 * this project provides a library implementing various basic services
