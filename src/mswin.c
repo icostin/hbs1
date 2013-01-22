@@ -194,7 +194,9 @@ static uint_t C41_CALL io_seek64
   lo = (LONG) disp;
   hi = (LONG) (disp >> 0x20);
 
-  if (!SetFilePointer(f->h, lo, &hi, anchor)) return C41_IO_FAILED;
+  lo = SetFilePointer(f->h, lo, &hi, anchor);
+  if (lo == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR) 
+    return C41_IO_FAILED;
   f->io.pos = (((int64_t) hi) << 0x20) | lo;
   if (f->io.pos < 0) return C41_IO_FAILED;
   return 0;
@@ -268,7 +270,57 @@ static uint_t C41_CALL file_open
   void *                    context
 )
 {
-  return C41_FSI_OPEN_FAILED;
+  uint16_t buf[0x105];
+  int c;
+  DWORD da, cd;
+  HANDLE h;
+  size_t olen;
+  
+  if (!path_n || path_a[path_n - 1]) return C41_FSI_BAD_PATH;
+  c = c41_mutf8_str_decode(path_a, path_n - 1, 
+                           &buf[0], C41_ITEM_COUNT(buf) - 1,
+                          NULL, &olen);
+  if (c) { /* TODO: handle truncation; */ return C41_FSI_OPEN_FAILED; }
+  buf[olen] = 0;
+
+  da = ((mode & C41_FSI_READ) ? GENERIC_READ : 0)
+     | ((mode & C41_FSI_WRITE) ? GENERIC_WRITE : 0);
+  if (!da) return C41_FSI_MISSING_ACCESS;
+
+  switch (mode & (C41_FSI_EXF_MASK | C41_FSI_NEWF_MASK))
+  {
+  case C41_FSI_EXF_REJECT | C41_FSI_NEWF_CREATE:
+    cd = CREATE_NEW;
+    break;
+  case C41_FSI_EXF_OPEN | C41_FSI_NEWF_REJECT:
+    cd = OPEN_EXISTING;
+    break;
+  case C41_FSI_EXF_OPEN | C41_FSI_NEWF_CREATE:
+    cd = OPEN_ALWAYS;
+    break;
+  case C41_FSI_EXF_TRUNC | C41_FSI_NEWF_REJECT:
+    cd = TRUNCATE_EXISTING;
+    break;
+  case C41_FSI_EXF_TRUNC | C41_FSI_NEWF_CREATE:
+    cd = CREATE_ALWAYS;
+    break;
+  //case C41_FSI_EXF_REJECT | C41_FSI_NEWF_REJECT:
+  default:
+    return C41_FSI_MISSING_ACTION;
+  }
+
+  h = CreateFileW(buf, da, 
+                  FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+                  NULL, cd, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (h == INVALID_HANDLE_VALUE)
+  {
+    return C41_FSI_OPEN_FAILED;
+  }
+  
+  *io_pp = iof_create(h);
+  if (!*io_pp) return C41_FSI_NO_RES;
+
+  return 0;
 }
 
 /* file_destroy *************************************************************/
@@ -411,34 +463,45 @@ static uint_t C41_CALL mutex_unlock (c41_smt_t * smt_p, c41_smt_mutex_t * mutex_
 /* cond_init ****************************************************************/
 static uint_t C41_CALL cond_init (c41_smt_t * smt_p, c41_smt_cond_t * cond_p)
 {
+  HANDLE * ep = (HANDLE *) cond_p;
   (void) smt_p;
-  (void) cond_p;
-  return C41_SMT_NO_CODE;
+  *ep = CreateEvent(NULL, FALSE, FALSE, NULL);
+  if (!*ep) return C41_SMT_FAIL;
+  return 0;
 }
 
 /* cond_finish **************************************************************/
 static uint_t C41_CALL cond_finish (c41_smt_t * smt_p, c41_smt_cond_t * cond_p)
 {
+  HANDLE e = *(HANDLE *) cond_p;
   (void) smt_p;
-  (void) cond_p;
-  return C41_SMT_NO_CODE;
+  if (!CloseHandle(e)) return C41_SMT_FAIL;
+  return 0;
 }
 
 /* cond_signal **************************************************************/
 static uint_t C41_CALL cond_signal (c41_smt_t * smt_p, c41_smt_cond_t * cond_p)
 {
+  HANDLE e = *(HANDLE *) cond_p;
   (void) smt_p;
-  (void) cond_p;
-  return C41_SMT_NO_CODE;
+  if (!SetEvent(e)) return C41_SMT_FAIL;
+  return 0;
 }
 
 /* cond_wait ****************************************************************/
 static uint_t C41_CALL cond_wait (c41_smt_t * smt_p, c41_smt_cond_t * cond_p,
                                  c41_smt_mutex_t * mutex_p)
 {
-  (void) smt_p;
-  (void) mutex_p; (void) cond_p;
-  return C41_SMT_NO_CODE;
+  HANDLE e = *(HANDLE *) cond_p;
+  int c;
+  DWORD d;
+
+  c = c41_smt_mutex_unlock(smt_p, mutex_p);
+  if (c) return c;
+  d = WaitForSingleObject(e, INFINITE);
+  c = c41_smt_mutex_lock(smt_p, mutex_p);
+  if (c || d) return C41_SMT_FAIL;
+  return 0;
 }
 
 /* hbs1_smt_init ************************************************************/
