@@ -38,7 +38,7 @@ HBS1_API uint_t C41_CALL hbs1_stdout (c41_io_t * * stdout_pp);
 HBS1_API uint_t C41_CALL hbs1_stderr (c41_io_t * * stderr_pp);
 HBS1_API uint_t C41_CALL hbs1_destroy_std_io (c41_io_t * io_p);
 
-HBS1_API uint_t C41_CALL hbs1_fsi_init (c41_fsi_t * fsi_p);
+HBS1_API uint_t C41_CALL hbs1_fsi_init (c41_fsi_t * fsi_p, c41_fspi_t * fspi_p);
 HBS1_API uint_t C41_CALL hbs1_fsi_finish (c41_fsi_t * fsi_p);
 
 HBS1_API uint_t C41_CALL hbs1_smt_init (c41_smt_t * smt_p, char const * impl);

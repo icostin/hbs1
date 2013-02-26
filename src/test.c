@@ -83,11 +83,12 @@ l_ma_finish:
 int io_test ()
 {
   c41_fsi_t fsi;
+  c41_fspi_t fspi;
   c41_io_t * io_p;
   uint_t sc;
 
   printf("io test:\n");
-  sc = hbs1_fsi_init(&fsi);
+  sc = hbs1_fsi_init(&fsi, &fspi);
   printf("- fsi: %s\n", hbs1_status_name(sc));
   sc = c41_file_open(&fsi, &io_p, (uint8_t const *) "hbs1.tmp",
                      sizeof("hbs1.tmp"),

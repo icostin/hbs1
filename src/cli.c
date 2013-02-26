@@ -15,6 +15,10 @@
 
 int main (int argc, char const * const * argv)
 {
+  c41_ma_t ma;
+  c41_smt_t smt;
+  c41_fsi_t fsi;
+  c41_fspi_t fspi;
   c41_cli_t cli;
   uint8_t h;
   uint_t hs;
@@ -33,10 +37,18 @@ int main (int argc, char const * const * argv)
 
   C41_VAR_ZERO(cli);
 
-  hs = hbs1_ma_init(&cli.ma);
+  hs = hbs1_ma_init(&ma);
   if (hs)
   {
     fprintf(stderr, "Error: failed initialising memory allocator "
+            "(%s, code %u)", hbs1_status_name(hs), hs);
+    return 0x42;
+  }
+
+  hs = hbs1_smt_init(&smt, NULL);
+  if (hs)
+  {
+    fprintf(stderr, "Error: failed initialising multithreading support "
             "(%s, code %u)", hbs1_status_name(hs), hs);
     return 0x42;
   }
@@ -46,7 +58,7 @@ int main (int argc, char const * const * argv)
   {
     fprintf(stderr, "Error: failed obtaining std input object "
             "(%s, code %u)", hbs1_status_name(hs), hs);
-    return 0x43;
+    return 0x42;
   }
 
   hs = hbs1_stdout(&cli.stdout_p);
@@ -65,7 +77,7 @@ int main (int argc, char const * const * argv)
     return 0x43;
   }
 
-  hs = hbs1_fsi_init(&cli.fsi);
+  hs = hbs1_fsi_init(&fsi, &fspi);
   if (hs)
   {
     fprintf(stderr, "Error: failed initialising file system interface "
@@ -73,6 +85,10 @@ int main (int argc, char const * const * argv)
     return 0x42;
   }
 
+  cli.ma_p = &ma;
+  cli.smt_p = &smt;
+  cli.fsi_p = &fsi;
+  cli.fspi_p = &fspi;
   cli.program = argv[0];
   cli.arg_a = argv + 1;
   cli.arg_n = argc - 1;
@@ -83,14 +99,14 @@ int main (int argc, char const * const * argv)
     h = 0x7F;
   }
 
-  hs = hbs1_fsi_finish(&cli.fsi);
+  hs = hbs1_fsi_finish(&fsi);
   if (hs)
   {
     fprintf(stderr, "Warning: failed finalising file system interface "
             "(%s, code %u)", hbs1_status_name(hs), hs);
   }
 
-  hs = hbs1_ma_finish(&cli.ma);
+  hs = hbs1_ma_finish(&ma);
   if (hs)
   {
     fprintf(stderr, "Warning: failed finalising memory allocator "

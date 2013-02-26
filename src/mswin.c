@@ -336,11 +336,12 @@ static uint_t C41_CALL file_destroy
 }
 
 /* hbs1_fsi_init ************************************************************/
-HBS1_API uint_t C41_CALL hbs1_fsi_init (c41_fsi_t * fsi_p)
+HBS1_API uint_t C41_CALL hbs1_fsi_init (c41_fsi_t * fsi_p, c41_fspi_t * fspi_p)
 {
   C41_VAR_ZERO(*fsi_p);
   fsi_p->file_open = file_open;
   fsi_p->file_destroy = file_destroy;
+  c41_fsp_mswin(fspi_p);
   return 0;
 }
 
