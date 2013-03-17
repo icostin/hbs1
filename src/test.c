@@ -13,6 +13,7 @@
 
 int io_test ();
 int smt_test ();
+int u8v_test (c41_ma_t * ma_p);
 
 int main (int argc, char const * const * argv)
 {
@@ -71,6 +72,7 @@ int main (int argc, char const * const * argv)
 
   if ((i = smt_test())) return i;
   if ((i = io_test())) return i;
+  if ((i = u8v_test(&ma))) return i;
 l_ma_finish:
   ui = hbs1_ma_finish(&ma);
   printf("- ma.finish:                          %s\n",
@@ -188,6 +190,32 @@ int smt_test ()
   }
   printf("- another job well done!\n");
 
+  return 0;
+}
+
+int u8v_test (c41_ma_t * ma_p)
+{
+  uint_t r;
+  c41_u8v_t v;
+  uint8_t * p;
+  printf("u8v test\n");
+  c41_u8v_init(&v, ma_p, 20);
+  r = c41_u8v_extend(&v, 10);
+  if (r)
+  {
+    printf("- failed extending\n");
+    return 1;
+  }
+  printf("- extend(10) -> m=0x%lX\n", v.m);
+  p = c41_u8v_append(&v, 17);
+  printf("- append(17) -> p=%p\n", p);
+  if (!p) return 1;
+  r = c41_u8v_opt(&v);
+  printf("- opt -> r=%d, m=0x%lX\n", r, v.m);
+  if (r) return 1;
+  r = c41_u8v_free(&v);
+  printf("- free -> r=%d\n", r);
+  printf("- passed!\n");
   return 0;
 }
 
