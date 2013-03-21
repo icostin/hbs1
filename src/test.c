@@ -210,9 +210,14 @@ int u8v_test (c41_ma_t * ma_p)
   p = c41_u8v_append(&v, 17);
   printf("- append(17) -> p=%p\n", p);
   if (!p) return 1;
+  C41_MEM_FILL(p, 17, 'A');
   r = c41_u8v_opt(&v);
   printf("- opt -> r=%d, m=0x%lX\n", r, v.m);
   if (r) return 1;
+  c41_u8v_afmt(&v, "123 is $Xi - ", 123);
+  c41_u8v_afmt(&v, "123 is $Xi", 123);
+  c41_u8v_afmt(&v, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+  printf("- test string: '%.*s'\n", (int) v.n, v.a);
   r = c41_u8v_free(&v);
   printf("- free -> r=%d\n", r);
   printf("- passed!\n");
