@@ -16,6 +16,8 @@ int smt_test ();
 int u8v_test (c41_ma_t * ma_p);
 
 static c41_ma_t ma;
+
+/* main *********************************************************************/
 int main (int argc, char const * const * argv)
 {
   void * p;
@@ -82,6 +84,7 @@ l_ma_finish:
   return 0;
 }
 
+/* io_test ******************************************************************/
 int io_test ()
 {
   c41_fsi_t fsi;
@@ -189,11 +192,19 @@ int smt_test ()
     printf("- thread_join: %d\n", i);
     return 1;
   }
+  c = c41_smt_mutex_destroy(mutex_p, &smt, &ma);
+  if (c)
+  {
+    printf("- failed to destroy mutex: %d\n", c);
+    return 1;
+  }
+
   printf("- another job well done!\n");
 
   return 0;
 }
 
+/* u8v_test *****************************************************************/
 int u8v_test (c41_ma_t * ma_p)
 {
   uint_t r;
