@@ -15,9 +15,9 @@ int io_test ();
 int smt_test ();
 int u8v_test (c41_ma_t * ma_p);
 
+static c41_ma_t ma;
 int main (int argc, char const * const * argv)
 {
-  c41_ma_t ma;
   void * p;
   void * q;
   void * r;
@@ -140,8 +140,8 @@ int smt_test ()
   uint_t c;
   int i;
   c41_smt_tid_t t;
-  uint8_t buf[0x100];
-  c41_smt_mutex_t * mutex_p = (c41_smt_mutex_t *) &buf[0];
+  //uint8_t buf[0x100];
+  c41_smt_mutex_t * mutex_p; // = (c41_smt_mutex_t *) &buf[0];
 
   printf("smt test:\n");
   c = hbs1_smt_init(&smt, NULL);
@@ -151,7 +151,8 @@ int smt_test ()
     return 1;
   }
 
-  c = c41_smt_mutex_init(&smt, mutex_p);
+  //c = c41_smt_mutex_init(&smt, mutex_p);
+  c = c41_smt_mutex_create(&mutex_p, &smt, &ma);
   if (c)
   {
     printf("- mutex_init failed: %u\n", c);
