@@ -475,24 +475,24 @@ static uint_t C41_CALL mutex_unlock (c41_smt_t * smt_p, c41_smt_mutex_t * mutex_
 static uint_t C41_CALL cond_init (c41_smt_t * smt_p, c41_smt_cond_t * cond_p)
 {
   (void) smt_p;
-  (void) cond_p;
-  return C41_SMT_NO_CODE;
+  if (pthread_cond_init((pthread_cond_t *) cond_p, NULL)) return C41_SMT_FAIL;
+  return 0;
 }
 
 /* cond_finish **************************************************************/
 static uint_t C41_CALL cond_finish (c41_smt_t * smt_p, c41_smt_cond_t * cond_p)
 {
   (void) smt_p;
-  (void) cond_p;
-  return C41_SMT_NO_CODE;
+  if (pthread_cond_destroy((pthread_cond_t *) cond_p)) return C41_SMT_FAIL;
+  return 0;
 }
 
 /* cond_signal **************************************************************/
 static uint_t C41_CALL cond_signal (c41_smt_t * smt_p, c41_smt_cond_t * cond_p)
 {
   (void) smt_p;
-  (void) cond_p;
-  return C41_SMT_NO_CODE;
+  if (pthread_cond_signal((pthread_cond_t *) cond_p)) return C41_SMT_FAIL;
+  return 0;
 }
 
 /* cond_wait ****************************************************************/
@@ -500,8 +500,9 @@ static uint_t C41_CALL cond_wait (c41_smt_t * smt_p, c41_smt_cond_t * cond_p,
                                  c41_smt_mutex_t * mutex_p)
 {
   (void) smt_p;
-  (void) mutex_p; (void) cond_p;
-  return C41_SMT_NO_CODE;
+  if (pthread_cond_wait((pthread_cond_t *) cond_p, (pthread_mutex_t *) mutex_p))
+    return C41_SMT_FAIL;
+  return 0;
 }
 
 /* hbs1_smt_init ************************************************************/
