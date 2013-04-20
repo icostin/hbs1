@@ -91,12 +91,15 @@ int io_test ()
   c41_fspi_t fspi;
   c41_io_t * io_p;
   uint_t sc;
+  ssize_t z;
+  uint8_t buf[0x20];
+  uint8_t const fn[] = "hbs1.tmp";
 
   printf("io test:\n");
   sc = hbs1_fsi_init(&fsi, &fspi);
   printf("- fsi: %s\n", hbs1_status_name(sc));
-  sc = c41_file_open(&fsi, &io_p, (uint8_t const *) "hbs1.tmp",
-                     sizeof("hbs1.tmp"),
+  z = fspi.fsp_from_utf8(buf, sizeof(buf), fn, C41_STR_LEN(fn));
+  sc = c41_file_open(&fsi, &io_p, buf, z,
                      C41_FSI_WRITE | C41_FSI_EXF_OPEN | C41_FSI_NEWF_CREATE |
                      C41_FSI_UR | C41_FSI_UW);
   printf("- file open: %s\n", c41_fsi_status_name(sc));

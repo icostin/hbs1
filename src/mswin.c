@@ -270,18 +270,19 @@ static uint_t C41_CALL file_open
   void *                    context
 )
 {
-  uint16_t buf[0x105];
+  //uint16_t buf[0x105];
   int c;
   DWORD da, cd;
   HANDLE h;
   size_t olen;
   
-  if (!path_n || path_a[path_n - 1]) return C41_FSI_BAD_PATH;
-  c = c41_mutf8_str_decode(path_a, path_n - 1, 
-                           &buf[0], C41_ITEM_COUNT(buf) - 1,
-                          NULL, &olen);
-  if (c) { /* TODO: handle truncation; */ return C41_FSI_OPEN_FAILED; }
-  buf[olen] = 0;
+  if (path_n < 2 || path_a[path_n - 2] || path_a[path_n - 1])
+    return C41_FSI_BAD_PATH;
+  // c = c41_mutf8_str_decode(path_a, path_n - 1, 
+  //                          &buf[0], C41_ITEM_COUNT(buf) - 1,
+  //                         NULL, &olen);
+  // if (c) { /* TODO: handle truncation; */ return C41_FSI_OPEN_FAILED; }
+  // buf[olen] = 0;
 
   da = ((mode & C41_FSI_READ) ? GENERIC_READ : 0)
      | ((mode & C41_FSI_WRITE) ? GENERIC_WRITE : 0);
@@ -309,7 +310,7 @@ static uint_t C41_CALL file_open
     return C41_FSI_MISSING_ACTION;
   }
 
-  h = CreateFileW(buf, da, 
+  h = CreateFileW((void *) path_a, da, 
                   FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
                   NULL, cd, FILE_ATTRIBUTE_NORMAL, NULL);
   if (h == INVALID_HANDLE_VALUE)
@@ -528,6 +529,4 @@ HBS1_API uint_t C41_CALL hbs1_smt_init (c41_smt_t * smt_p, char const * impl)
 
   return 0;
 }
-
-
 
