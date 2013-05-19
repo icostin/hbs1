@@ -11,9 +11,13 @@
 #include <c41.h>
 #include <hbs1.h>
 
+#define Z(_expr) do { if ((_expr)) { printf("%s:%u:%s(): (%s) is non-zero\n", __FILE__, __LINE__, __FUNCTION__, #_expr); return 1; } } while (0)
+#define T(_expr) Z(!(_expr))
+
 int io_test ();
 int smt_test ();
 int u8v_test (c41_ma_t * ma_p);
+int esm_test (c41_ma_t * ma_p);
 
 static c41_ma_t ma;
 
@@ -75,6 +79,7 @@ int main (int argc, char const * const * argv)
   if ((i = smt_test())) return i;
   if ((i = io_test())) return i;
   if ((i = u8v_test(&ma))) return i;
+  if ((i = esm_test(&ma))) return i;
 l_ma_finish:
   ui = hbs1_ma_finish(&ma);
   printf("- ma.finish:                          %s\n",
@@ -237,5 +242,47 @@ int u8v_test (c41_ma_t * ma_p)
   printf("- free -> r=%d\n", r);
   printf("- passed!\n");
   return 0;
+}
+
+/* esm_test *****************************************************************/
+int esm_test (c41_ma_t * ma_p)
+{
+    c41_esm_t esm;
+    int c;
+
+    printf("esm test\n");
+    c41_esm_init(&esm, ma_p, 3, 14, 2, 6);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 0); T(esm.lex == 0);
+    //printf("ebc=%d pbc=%d fbc=%d\n", esm.ebc, esm.pbc, esm.fbc);
+    //printf("b0n=%u\n", esm.bv.a[0].n);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 0); T(esm.lex == 1);
+    //printf("ebc=%d pbc=%d fbc=%d\n", esm.ebc, esm.pbc, esm.fbc);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 1); T(esm.lex == 0);
+    //printf("bx=%u, ex=%u\n", esm.lbx, esm.lex);
+    //printf("ebc=%d pbc=%d fbc=%d\n", esm.ebc, esm.pbc, esm.fbc);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 1); T(esm.lex == 1);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 1); T(esm.lex == 2);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 1); T(esm.lex == 3);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 2); T(esm.lex == 0);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 2); T(esm.lex == 1);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 2); T(esm.lex == 2);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 2); T(esm.lex == 3);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 2); T(esm.lex == 4);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 2); T(esm.lex == 5);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 3); T(esm.lex == 0);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 3); T(esm.lex == 1);
+    T(c41_esm_alloc(&esm) == C41_ESM_LIMIT);
+    Z(c41_esm_deref(&esm, 0, 0));
+    Z(c41_esm_deref(&esm, 0, 1));
+    Z(c41_esm_deref(&esm, 3, 0));
+    Z(c41_esm_deref(&esm, 3, 1));
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 3); T(esm.lex == 1);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 3); T(esm.lex == 0);
+    Z(c41_esm_alloc(&esm)); T(esm.lbx == 0); T(esm.lex == 1);
+
+    c = c41_esm_finish(&esm);
+    if (c) { printf("- esm_finish: %d\n", c); return c; }
+    printf("- passed!\n");
+    return 0;
 }
 
