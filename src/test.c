@@ -94,25 +94,44 @@ int io_test ()
 {
   c41_fsi_t fsi;
   c41_fspi_t fspi;
+  c41_ma_t ma;
   c41_io_t * io_p;
   uint_t sc;
   ssize_t z;
   uint8_t buf[0x20];
   uint8_t const fn[] = "hbs1.tmp";
+  uint8_t * data;
+  size_t size;
 
   printf("io test:\n");
   sc = hbs1_fsi_init(&fsi, &fspi);
   printf("- fsi: %s\n", hbs1_status_name(sc));
   z = fspi.fsp_from_utf8(buf, sizeof(buf), fn, C41_STR_LEN(fn));
-  sc = c41_file_open(&fsi, &io_p, buf, z,
+  sc = c41_file_open_fsp(buf, z,
                      C41_FSI_WRITE | C41_FSI_EXF_OPEN | C41_FSI_NEWF_CREATE |
-                     C41_FSI_UR | C41_FSI_UW);
+                     C41_FSI_UR | C41_FSI_UW, 
+                     &fsi, &io_p);
   printf("- file open: %s\n", c41_fsi_status_name(sc));
   if (sc) return 1;
   sc = c41_io_write(io_p, "test", 4, NULL);
   printf("- io write: %s\n", c41_io_status_name(sc));
   sc = c41_file_destroy(&fsi, io_p);
   printf("- file destroy: %s\n", c41_fsi_status_name(sc));
+
+  if (hbs1_ma_init(&ma))
+  {
+      printf("- ma init failed!\n");
+      return 1;
+  }
+
+  sc = c41_file_load_u8p(fn, C41_STR_LEN(fn),
+                          &fspi, &fsi, &ma, &data, &size);
+  if (sc)
+  {
+      printf("- fsi open error: %d\n", sc);
+  }
+  printf("size: %zu\n", size);
+
   return 0;
 }
 
